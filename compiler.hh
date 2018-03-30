@@ -16,12 +16,16 @@
 #ifndef MASSTREE_COMPILER_HH
 #define MASSTREE_COMPILER_HH 1
 #include <stdint.h>
+#include <cstdint>
+#include <cstdlib>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
-#include <arpa/inet.h>
-#if HAVE_TYPE_TRAITS
+//#include <arpa/inet.h>
+//#if HAVE_TYPE_TRAITS
 #include <type_traits>
-#endif
+//#endif
+
+#include <ebbrt/native/NetMisc.h>
 
 #define arraysize(a) (sizeof(a) / sizeof((a)[0]))
 
@@ -494,38 +498,24 @@ inline T* fetch_and_add(T** object, int addend) {
     return (T*) sco_t::fetch_and_add((type*) object, (type) (addend * sizeof(T)));
 }
 
-inline char fetch_and_add(char* object, int addend) {
-    return fetch_and_add(object, (char) addend);
+inline int8_t fetch_and_add(int8_t* object, int addend) {
+    return fetch_and_add(object, int8_t(addend));
 }
-inline signed char fetch_and_add(signed char* object, int addend) {
-    return fetch_and_add(object, (signed char) addend);
+inline uint8_t fetch_and_add(uint8_t* object, int addend) {
+    return fetch_and_add(object, uint8_t(addend));
 }
-inline unsigned char fetch_and_add(unsigned char* object, int addend) {
-    return fetch_and_add(object, (unsigned char) addend);
+inline int16_t fetch_and_add(int16_t* object, int addend) {
+    return fetch_and_add(object, int16_t(addend));
 }
-inline short fetch_and_add(short* object, int addend) {
-    return fetch_and_add(object, (short) addend);
-}
-inline unsigned short fetch_and_add(unsigned short* object, int addend) {
-    return fetch_and_add(object, (unsigned short) addend);
+inline uint16_t fetch_and_add(uint16_t* object, int addend) {
+    return fetch_and_add(object, uint16_t(addend));
 }
 inline unsigned fetch_and_add(unsigned* object, int addend) {
-    return fetch_and_add(object, (unsigned) addend);
-}
-inline long fetch_and_add(long* object, int addend) {
-    return fetch_and_add(object, (long) addend);
+    return fetch_and_add(object, unsigned(addend));
 }
 inline unsigned long fetch_and_add(unsigned long* object, int addend) {
-    return fetch_and_add(object, (unsigned long) addend);
+    return fetch_and_add(object, (unsigned long)(addend));
 }
-#if SIZEOF_LONG_LONG <= 8
-inline long long fetch_and_add(long long* object, int addend) {
-    return fetch_and_add(object, (long long) addend);
-}
-inline unsigned long long fetch_and_add(unsigned long long* object, int addend) {
-    return fetch_and_add(object, (unsigned long long) addend);
-}
-#endif
 
 
 /** @brief Test-and-set lock acquire. */
@@ -707,6 +697,11 @@ inline T iceil(T x, U y) {
     return x + (mod ? y - mod : 0);
 }
 
+inline size_t iceil2(size_t x, size_t y) {
+    size_t mod = x % y;
+    return x + (mod ? y - mod : 0);
+}
+
 /** @brief Return the smallest power of 2 greater than or equal to @a x.
     @pre @a x != 0
     @pre the result is representable in type T (that is, @a x can't be
@@ -756,19 +751,19 @@ inline char host_to_net_order(char x) {
 }
 /** @overload */
 inline short host_to_net_order(short x) {
-    return htons(x);
+  return ebbrt::htons(x);
 }
 /** @overload */
 inline unsigned short host_to_net_order(unsigned short x) {
-    return htons(x);
+    return ebbrt::htons(x);
 }
 /** @overload */
 inline int host_to_net_order(int x) {
-    return htonl(x);
+    return ebbrt::htonl(x);
 }
 /** @overload */
 inline unsigned host_to_net_order(unsigned x) {
-    return htonl(x);
+    return ebbrt::htonl(x);
 }
 #if SIZEOF_LONG == 4
 /** @overload */
@@ -842,28 +837,28 @@ inline char net_to_host_order(char x) {
 }
 /** @overload */
 inline short net_to_host_order(short x) {
-    return ntohs(x);
+    return ebbrt::ntohs(x);
 }
 /** @overload */
 inline unsigned short net_to_host_order(unsigned short x) {
-    return ntohs(x);
+    return ebbrt::ntohs(x);
 }
 /** @overload */
 inline int net_to_host_order(int x) {
-    return ntohl(x);
+    return ebbrt::ntohl(x);
 }
 /** @overload */
 inline unsigned net_to_host_order(unsigned x) {
-    return ntohl(x);
+    return ebbrt::ntohl(x);
 }
 #if SIZEOF_LONG == 4
 /** @overload */
 inline long net_to_host_order(long x) {
-    return ntohl(x);
+    return ebbrt::ntohl(x);
 }
 /** @overload */
 inline unsigned long net_to_host_order(unsigned long x) {
-    return ntohl(x);
+    return ebbrt::ntohl(x);
 }
 #elif SIZEOF_LONG == 8
 /** @overload */
@@ -1101,7 +1096,6 @@ template <> struct make_signed<long long> : public type_synonym<long long> {};
 template <> struct make_signed<unsigned long long> : public type_synonym<long long> {};
 #endif
 
-
 /** @class is_trivially_copyable
   @brief Template determining whether T may be copied by memcpy.
 
@@ -1125,26 +1119,14 @@ template <> struct is_trivially_copyable<unsigned long> : public true_type {};
 template <> struct is_trivially_copyable<long> : public true_type {};
 template <> struct is_trivially_copyable<unsigned long long> : public true_type {};
 template <> struct is_trivially_copyable<long long> : public true_type {};
-template <typename T> struct is_trivially_copyable<T*> : public true_type {};
-#endif
-
-
-/** @class is_trivially_destructible
-  @brief Template determining whether T may be trivially destructed. */
-
-#if HAVE_CXX_TEMPLATE_ALIAS && HAVE_TYPE_TRAITS && HAVE_STD_IS_TRIVIALLY_DESTRUCTIBLE
-template <typename T> using is_trivially_destructible = std::is_trivially_destructible<T>;
-#elif HAVE___HAS_TRIVIAL_DESTRUCTOR
-template <typename T> struct is_trivially_destructible : public integral_constant<bool, __has_trivial_destructor(T)> {};
-#else
-template <typename T> struct is_trivially_destructible : public is_trivially_copyable<T> {};
+template <typename T> struct is_trivially_copyable<T *> : public true_type {};
 #endif
 
 
 /** @class fast_argument
   @brief Template defining a fast argument type for objects of type T.
 
-  fast_argument<T>::type equals either "const T&" or "T".
+  fast_argument<T>::type equals either "const T &" or "T".
   fast_argument<T>::is_reference is true iff fast_argument<T>::type is
   a reference. If fast_argument<T>::is_reference is true, then
   fast_argument<T>::enable_rvalue_reference is a typedef to void; otherwise
@@ -1156,7 +1138,7 @@ struct fast_argument;
 
 template <typename T> struct fast_argument<T, true> {
     static constexpr bool is_reference = true;
-    typedef const T& type;
+    typedef const T &type;
 #if HAVE_CXX_RVALUE_REFERENCES
     typedef void enable_rvalue_reference;
 #endif
