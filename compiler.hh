@@ -16,16 +16,12 @@
 #ifndef MASSTREE_COMPILER_HH
 #define MASSTREE_COMPILER_HH 1
 #include <stdint.h>
-#include <cstdint>
-#include <cstdlib>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
-//#include <arpa/inet.h>
-//#if HAVE_TYPE_TRAITS
+#include <arpa/inet.h>
+#if HAVE_TYPE_TRAITS
 #include <type_traits>
-//#endif
-
-#include <ebbrt/native/NetMisc.h>
+#endif
 
 #define arraysize(a) (sizeof(a) / sizeof((a)[0]))
 
@@ -697,11 +693,6 @@ inline T iceil(T x, U y) {
     return x + (mod ? y - mod : 0);
 }
 
-inline size_t iceil2(size_t x, size_t y) {
-    size_t mod = x % y;
-    return x + (mod ? y - mod : 0);
-}
-
 /** @brief Return the smallest power of 2 greater than or equal to @a x.
     @pre @a x != 0
     @pre the result is representable in type T (that is, @a x can't be
@@ -751,19 +742,19 @@ inline char host_to_net_order(char x) {
 }
 /** @overload */
 inline short host_to_net_order(short x) {
-  return ebbrt::htons(x);
+    return htons(x);
 }
 /** @overload */
 inline unsigned short host_to_net_order(unsigned short x) {
-    return ebbrt::htons(x);
+    return htons(x);
 }
 /** @overload */
 inline int host_to_net_order(int x) {
-    return ebbrt::htonl(x);
+    return htonl(x);
 }
 /** @overload */
 inline unsigned host_to_net_order(unsigned x) {
-    return ebbrt::htonl(x);
+    return htonl(x);
 }
 #if SIZEOF_LONG == 4
 /** @overload */
@@ -837,28 +828,28 @@ inline char net_to_host_order(char x) {
 }
 /** @overload */
 inline short net_to_host_order(short x) {
-    return ebbrt::ntohs(x);
+    return ntohs(x);
 }
 /** @overload */
 inline unsigned short net_to_host_order(unsigned short x) {
-    return ebbrt::ntohs(x);
+    return ntohs(x);
 }
 /** @overload */
 inline int net_to_host_order(int x) {
-    return ebbrt::ntohl(x);
+    return ntohl(x);
 }
 /** @overload */
 inline unsigned net_to_host_order(unsigned x) {
-    return ebbrt::ntohl(x);
+    return ntohl(x);
 }
 #if SIZEOF_LONG == 4
 /** @overload */
 inline long net_to_host_order(long x) {
-    return ebbrt::ntohl(x);
+    return ntohl(x);
 }
 /** @overload */
 inline unsigned long net_to_host_order(unsigned long x) {
-    return ebbrt::ntohl(x);
+    return ntohl(x);
 }
 #elif SIZEOF_LONG == 8
 /** @overload */
